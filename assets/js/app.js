@@ -1060,12 +1060,14 @@ async function geminiGenerate(prompt, images, { signal, onText } = {}) {
   if (!model) { model = pickGemini(await geminiModels(key)); if (!model) throw new Error('Khóa này chưa dùng được mô hình Gemini nào.'); S.settings.geminiModel = model; save(); }
   const parts = [{ text: prompt }];
   for (const b of images || []) parts.push({ inline_data: { mime_type: b.type || 'image/jpeg', data: await blobB64(b) } });
-  const body = JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { temperature: 0.5 } });
-  const call = async m => {
+  // giảm “suy nghĩ” để trả lời nhanh hơn (Gemini 3.x: thinkingLevel; 2.5: thinkingBudget)
+  const think = m => /^gemini-3/.test(m) ? { thinkingLevel: 'low' } : /^gemini-2\.5-flash/.test(m) ? { thinkingBudget: 0 } : null;
+  const mkBody = (m, withThink) => { const gc = { temperature: 0.5 }; const t = withThink && think(m); if (t) gc.thinkingConfig = t; return JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: gc }); };
+  const call = async (m, withThink = true) => {
     let r;
-    try { r = await fetch(`${GEMINI}/models/${encodeURIComponent(m)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal }); }
+    try { r = await fetch(`${GEMINI}/models/${encodeURIComponent(m)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: mkBody(m, withThink), signal }); }
     catch (e) { if (e && e.name === 'AbortError') throw e; throw new Error('Không kết nối được Gemini. Kiểm tra mạng Internet.'); }
-    if (!r.ok) { let j = {}; try { j = await r.json(); } catch (e) { } throw gemErr(r.status, j); }
+    if (!r.ok) { let j = {}; try { j = await r.json(); } catch (e) { } if (r.status === 400 && withThink && think(m)) return call(m, false); throw gemErr(r.status, j); }
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', text = '', block = '';
     for (;;) {
       const { done, value } = await rd.read(); if (done) break;
@@ -1219,7 +1221,10 @@ async function openGen() {
     GEN.ctl = new AbortController(); go.disabled = true; stop.hidden = false;
     out.innerHTML = `<div class="gen-status"><span class="spinner"></span><span id="genProg">${sample ? 'Claude' : 'Gemini'} đang đọc tài liệu và soạn câu hỏi… (thường mất 20–60 giây)</span></div>`;
     try {
-      const opts = { signal: GEN.ctl.signal, modelTier: 'default', cache: false, onText: ({ text }) => { const n = (text.match(/^\s*\**\s*câu\s*\d+/gim) || []).length; const p = $('#genProg', back); if (p) p.textContent = `Đang soạn… đã có ${Math.min(n, o.count)}/${o.count} câu`; } };
+      const t0 = Date.now(); let nDone = 0;
+      const paint = () => { const p = $('#genProg', back); if (!p) return; const s = Math.round((Date.now() - t0) / 1000); p.textContent = nDone ? `Đang soạn… đã có ${Math.min(nDone, o.count)}/${o.count} câu · ${s} giây` : `${sample ? 'Claude' : 'Gemini'} đang đọc tài liệu… ${s} giây (tài liệu dài có thể mất 1–2 phút)`; };
+      clearInterval(GEN.tick); GEN.tick = setInterval(paint, 1000);
+      const opts = { signal: GEN.ctl.signal, modelTier: 'default', cache: false, onText: ({ text }) => { nDone = (text.match(/^\s*\**\s*câu\s*\d+/gim) || []).length; paint(); } };
       if (GEN.images.length) opts.images = GEN.images;
       const prompt = genPrompt('text', t || '(Xem nội dung trong ảnh đính kèm.)');
       let text = '';
@@ -1232,7 +1237,7 @@ async function openGen() {
       if (e && e.name === 'AbortError') e = { code: 'cancelled' };
       const msg = { not_granted: 'Trang chưa được phép dùng Claude. Hãy cho phép khi được hỏi, hoặc dùng cách sao chép lệnh.', rate_limited: 'Claude đang bận. Đợi một lát rồi bấm lại.', cancelled: 'Đã dừng.', invalid_json: 'Câu trả lời chưa đúng định dạng. Bấm “Tạo câu hỏi” lần nữa.', empty: 'Không nhận được câu hỏi nào. Thử lại hoặc bổ sung nội dung tài liệu.', images_unavailable: 'Không gửi được ảnh. Hãy dùng file chữ hoặc dán nội dung.' }[e && e.code] || ('Không tạo được câu hỏi: ' + ((e && e.message) || 'lỗi không rõ'));
       out.innerHTML = `<div class="docinfo err">${esc(msg)}</div>`;
-    } finally { go.disabled = false; stop.hidden = true; GEN.ctl = null; }
+    } finally { clearInterval(GEN.tick); go.disabled = false; stop.hidden = true; GEN.ctl = null; }
   }
   function renderGenOut() {
     const out = $('#genOut', back); if (!out) return;
