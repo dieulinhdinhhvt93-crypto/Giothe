@@ -9,8 +9,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="stylesheet" href="assets/fonts/fonts.css?v=d3f8e31595">
-<link rel="stylesheet" href="assets/katex/katex.min.css?v=d3f8e31595">
+<link rel="stylesheet" href="assets/fonts/fonts.css?v=20261125a">
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=20261125a">
 <title>Giơ Thẻ</title>
 <style>
 /* Bố cục: thanh trên màu cam san hô; nền vở ô ly xanh nhạt; “Trình chiếu” = thẻ câu hỏi trắng + 4 ô đáp án màu đặc | camera + sĩ số lớp; dock điều khiển phía dưới.
@@ -208,13 +208,13 @@ body.fs .qtext{font-size:clamp(28px,3.4vw,58px)}
 
 /* ---------- split editors (sets / classes) ---------- */
 .split{display:grid;grid-template-columns:270px minmax(0,1fr);gap:20px;align-items:start}
-.list{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:12px;display:grid;gap:10px;position:sticky;top:84px;box-shadow:var(--shadow)}
+.list{grid-template-columns:minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:12px;display:grid;gap:10px;position:sticky;top:84px;box-shadow:var(--shadow)}
 .list-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 2px 0}
 .list-head h2{font-size:18px}
-.list ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
-.li{width:100%;border:0;background:none;text-align:left;padding:10px 11px;border-radius:12px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
-.li span{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.li small{color:var(--muted);font-family:var(--f-mono);font-size:11px;white-space:nowrap}
+.list ul{grid-template-columns:minmax(0,1fr);list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.li{width:100%;border:0;background:none;text-align:left;padding:10px 11px;border-radius:12px;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;min-width:0}
+.li span{font-weight:700;min-width:0;line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.li small{color:var(--muted);font-family:var(--f-mono);font-size:11px;white-space:nowrap;flex:none;padding-top:2px}
 .li:hover{background:var(--soft)}
 .li.cur{background:var(--board);color:#fff;box-shadow:0 8px 16px -10px var(--brand-glow)}
 .li.cur small{color:inherit;opacity:.85}
@@ -658,11 +658,11 @@ body.phone-mode{background:var(--paper)}
 <input type="file" id="docInput" accept=".docx,.pptx,.pdf,.txt,.md,.png,.jpg,.jpeg,.webp" hidden>
 
 <script>window.GT_PDFJS='assets/pdfjs/';window.GT_SW='sw.js';</script>
-<script src="assets/js/aruco.js?v=d3f8e31595"></script>
-<script src="assets/katex/katex.min.js?v=d3f8e31595"></script>
-<script src="assets/katex/mhchem.min.js?v=d3f8e31595"></script>
-<script src="assets/js/mqtt.min.js?v=d3f8e31595"></script>
-<script src="assets/js/qrcode.js?v=d3f8e31595"></script>
-<script src="assets/js/app.js?v=d3f8e31595"></script>
+<script src="assets/js/aruco.js?v=20261125a"></script>
+<script src="assets/katex/katex.min.js?v=20261125a"></script>
+<script src="assets/katex/mhchem.min.js?v=20261125a"></script>
+<script src="assets/js/mqtt.min.js?v=20261125a"></script>
+<script src="assets/js/qrcode.js?v=20261125a"></script>
+<script src="assets/js/app.js?v=20261125a"></script>
 </body>
 </html>
