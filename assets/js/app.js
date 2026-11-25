@@ -87,8 +87,11 @@ function normalize(d) {
   return d;
 }
 function load() {
-  try { const t = localStorage.getItem(STORE_KEY); if (!t) return null; return normalize(JSON.parse(t)); } catch (e) { return null; }
+  let t = null;
+  try { t = localStorage.getItem(STORE_KEY); if (!t) return null; return normalize(JSON.parse(t)); }
+  catch (e) { try { if (t) localStorage.setItem(STORE_KEY + '.loi-' + Date.now(), t); } catch (e2) { } return null; } // giữ lại dữ liệu cũ, không ghi đè
 }
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { } // xin trình duyệt không tự xóa dữ liệu
 let S = load() || sampleData();
 let saveTimer = null;
 function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 250); }
@@ -716,7 +719,7 @@ function renderSets() {
       <button class="btn magic" data-act="gen-open">${SPARK}Tạo câu hỏi từ tài liệu</button>
       <div class="list-head"><h2>Bộ câu hỏi</h2><button class="btn small" data-act="set-add">+ Bộ mới</button></div>
       <button class="btn small ghost" data-act="set-importfile" style="justify-self:start">Nhập bộ từ file (.json)</button>
-      <ul>${S.sets.map(s => `<li><button class="li ${sel && s.id === sel.id ? 'cur' : ''}" data-act="set-pick" data-id="${s.id}"><span>${esc(s.name)}</span><small>${s.questions.length} câu</small></button></li>`).join('') || '<li class="hint">Chưa có bộ nào.</li>'}</ul>
+      <ul>${S.sets.map(s => `<li><button class="li ${sel && s.id === sel.id ? 'cur' : ''}" data-act="set-pick" data-id="${s.id}" title="${esc(s.name)}"><span>${esc(s.name)}</span><small>${s.questions.length} câu</small></button></li>`).join('') || '<li class="hint">Chưa có bộ nào.</li>'}</ul>
     </aside>
     <div class="editor">${aiCard()}${sel ? setEditor(sel) : emptyState('Chưa có bộ câu hỏi', 'Mỗi bộ là một bài ôn tập hoặc kiểm tra nhanh. Có thể dán nguyên đề từ Word, hoặc bấm “Tạo câu hỏi từ tài liệu”.', 'set-add', 'Tạo bộ câu hỏi')}</div>
   </div>`;
@@ -1279,7 +1282,7 @@ function renderClasses() {
   $('#v-classes').innerHTML = `<div class="split">
     <aside class="list">
       <div class="list-head"><h2>Lớp học</h2><button class="btn small" data-act="cls-add">+ Lớp mới</button></div>
-      <ul>${S.classes.map(c => `<li><button class="li ${sel && c.id === sel.id ? 'cur' : ''}" data-act="cls-pick" data-id="${c.id}"><span>${esc(c.name)}</span><small>${c.students.length} HS</small></button></li>`).join('') || '<li class="hint">Chưa có lớp nào.</li>'}</ul>
+      <ul>${S.classes.map(c => `<li><button class="li ${sel && c.id === sel.id ? 'cur' : ''}" data-act="cls-pick" data-id="${c.id}" title="${esc(c.name)}"><span>${esc(c.name)}</span><small>${c.students.length} HS</small></button></li>`).join('') || '<li class="hint">Chưa có lớp nào.</li>'}</ul>
     </aside>
     <div class="editor">${sel ? classEditor(sel) : emptyState('Chưa có lớp học', 'Tạo lớp rồi dán danh sách tên từ Excel hoặc Word — mỗi dòng một em.', 'cls-add', 'Tạo lớp học')}</div>
   </div>`;
